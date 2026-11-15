@@ -236,9 +236,9 @@
   <tr><td>Nobody knows spend or what gets eaten</td><td>Every purchase lands in the ledger. The <b>monthly report</b> shows spend vs budget per office in its own currency, one NOK total, refills per person, most-bought items, hours a box sat empty, and days a full box lasts.</td></tr>
 </table>
 
-<p><b>Budget check.</b> <code>remaining = budget &minus; spent &minus; reserved</code>, per office, in its own currency, per month in the office's <i>local</i> time zone. On accept, <b>cap = min(typical max, remaining)</b> is reserved. A receipt at or under the cap is spent and claimed automatically. Above the cap, the coordinator reviews. If less than the typical minimum is left when the box is reported, the refill is <b>blocked</b> until the coordinator approves; an approved overspend shows as a negative remainder. Money is stored as integer &oslash;re/paise; mixing NOK and INR raises an error.</p>
+<p><b>Budget check.</b> <code>remaining = budget &minus; spent &minus; reserved</code>, per office, in its own currency, per month in the office's <i>local</i> time zone. On accept, <b>cap = min(typical max, remaining)</b> is reserved. A receipt at or under the cap is spent and claimed automatically. Above the cap, the coordinator reviews. If less than the typical minimum is left when the box is reported, the refill is <b>blocked</b> until the coordinator approves or the next month's budget starts (re-checked automatically); an approved overspend shows as a negative remainder. Money is stored as integer &oslash;re/paise; mixing NOK and INR raises an error.</p>
 
-<h2>4. Assumptions (questions asked; answers not in before the deadline)</h2>
+<h2>4. Assumptions</h2>
 <div class="cols">
 <ol>
   <li><b>Report currency is NOK</b>, using one stored rate per month (e.g. the Norges Bank month-end rate), printed in the report so it can be reproduced.</li>
@@ -257,9 +257,10 @@
   <li><b>Asking one person at a time is slower than broadcasting</b> (worst case about 9 h before it opens to everyone), but it removes the bystander effect that causes the problem. Broadcast stays as the fallback.</li>
   <li><b>Reserving the full cap</b> can block a refill near month end that would have fit. It is simple and never overspends silently, and the coordinator can override.</li>
   <li><b>One FX rate per month</b> makes the NOK total approximate compared with what payroll actually paid. It is fine for a management overview and reproducible. Budgets themselves never need conversion.</li>
-  <li><b>Timers run on wall-clock time</b>, so an evening report waits for the morning. Pausing timers outside office hours is the first thing I'd add.</li>
+  <li><b>Timers run on wall-clock time</b>, so an evening report waits for the morning; pausing them outside office hours comes next.</li>
   <li><b>We can't make HR faster.</b> We remove our own delay (instant submission) and make HR's delay visible.</li>
-  <li><b>A late buyer is refused once the refill is reassigned</b> (it would cause a double buy). They are told to contact the coordinator, a rare and explicit manual case.</li>
+  <li><b>Coordinator decisions have no reminder yet:</b> a held receipt can wait. Next step: a 24 h nudge, then a backup person.</li>
+  <li><b>A late buyer is refused once the refill is reassigned</b> (else a double buy); the coordinator handles that rare case.</li>
   <li><b>Presence trusts chat status.</b> If it is wrong, the person declines or the offer times out, so it corrects itself.</li>
   <li>The take-home stores data in memory behind a lock. Production would be one small service + Postgres, with the chat bot as a thin adapter that parses commands and calls these same methods.</li>
 </ul>
@@ -273,7 +274,7 @@
   <li><b>Company cards or paying suppliers directly:</b> that is a finance-policy change, not software. It is worth proposing, though, because it would remove reimbursement entirely.</li>
 </ul>
 
-<p class="small"><b>Code:</b> Python 3.12, standard library only, with fakes for chat, HR, presence and clock. 46 pytest tests, incl. a race test (run 10&times;) verified to fail without the lock. <code>python demo.py</code> plays the full flow. See README.</p>
+<p class="small"><b>Code:</b> Python 3.12, standard library only, with fakes for chat, HR, presence and clock. 47 pytest tests, incl. a race test (run 10&times;) verified to fail without the lock. <code>python demo.py</code> plays the full flow. See README.</p>
 
 </body>
 </html>
