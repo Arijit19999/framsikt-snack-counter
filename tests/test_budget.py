@@ -129,6 +129,27 @@ def test_exhausted_budget_blocks_the_refill_until_coordinator_approves():
     assert w.service.ledger.remaining(OSLO, month) == nok("-700")  # visible overspend
 
 
+def test_blocked_refill_restarts_by_itself_when_the_new_month_budget_starts():
+    w = build_world(start=datetime(2026, 11, 20, 8, 0, tzinfo=timezone.utc))
+    for amount in ("1200", "1200", "1200", "1200", "1000"):  # 200 NOK left
+        complete_refill(w, OSLO, nok(amount))
+    refill = w.service.report_empty(OSLO, "anyone")
+    assert refill.state is RefillState.BLOCKED_BUDGET
+
+    # Coordinator never answers. Still November: nothing changes.
+    w.clock.advance(days=5)
+    w.service.tick()
+    assert refill.state is RefillState.BLOCKED_BUDGET
+
+    # 1 Dec, 08:00 in Oslo: new month's budget, so the refill restarts on its own.
+    w.clock.set(datetime(2026, 12, 1, 7, 0, tzinfo=timezone.utc))
+    w.service.tick()
+    assert refill.state is RefillState.OFFERED
+    assert refill.current_offer is not None
+    assert refill.budget_override is False
+    assert any("restarted" in m for m in w.chat.to("coord-oslo"))
+
+
 def test_hr_rejection_gives_the_money_back_to_the_budget():
     w = build_world()
     refill = complete_refill(w, OSLO, nok("850"))

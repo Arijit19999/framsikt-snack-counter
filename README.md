@@ -23,7 +23,7 @@ Requires Python 3.11+.
 python -m venv .venv
 .venv\Scripts\activate          # Windows  (macOS/Linux: source .venv/bin/activate)
 pip install -r requirements.txt
-pytest                          # 46 tests (the race test runs 10x, so pytest shows 55)
+pytest                          # 47 tests (the race test runs 10x, so pytest shows 56)
 python demo.py                  # plays a full Oslo + Bengaluru month and prints the chat log + report
 ```
 
@@ -50,18 +50,18 @@ python demo.py                  # plays a full Oslo + Bengaluru month and prints
 | A refill nobody completes is handed to someone else | `test_refill_nobody_completes_is_handed_to_someone_else`, `test_unanswered_offer_expires_and_moves_on`, `test_decline_passes_the_refill_to_the_next_volunteer` |
 | Nobody responds: escalate | `test_after_three_failed_offers_it_is_opened_to_everyone_and_coordinator_told`, `test_nobody_in_the_office_goes_straight_to_the_channel` |
 | Fair rotation, presence and visitors | `test_selection.py` (all), especially `test_refills_rotate_across_volunteers_over_a_month`, `test_visitor_counts_for_the_office_they_are_visiting` |
-| Budget check: cap, review, blocked, override | `test_accepting_reserves_the_spend_cap`, `test_receipt_above_cap_waits_for_coordinator_before_going_to_hr`, `test_cap_shrinks_to_what_is_left_in_the_budget`, `test_exhausted_budget_blocks_the_refill_until_coordinator_approves` |
+| Budget check: cap, review, blocked, override | `test_accepting_reserves_the_spend_cap`, `test_receipt_above_cap_waits_for_coordinator_before_going_to_hr`, `test_cap_shrinks_to_what_is_left_in_the_budget`, `test_exhausted_budget_blocks_the_refill_until_coordinator_approves`, `test_blocked_refill_restarts_by_itself_when_the_new_month_budget_starts` |
 | Budgets and totals correct across both currencies | `test_each_office_is_budgeted_in_its_own_currency`, `test_visitor_buys_in_local_currency_and_it_hits_the_visited_office_budget`, `test_combined_total_converts_each_office_once_into_nok`, `test_report_refuses_to_guess_a_missing_exchange_rate` |
 | Budget month follows each office's local time | `test_budget_month_follows_each_office_local_time`, `test_commit_in_one_month_and_purchase_in_the_next_is_counted_at_purchase` |
 | HR claims: correct payload, no duplicates, status tracked | `test_receipt_within_cap_is_spent_and_claimed_with_the_right_details`, `test_hr_outage_is_retried_without_creating_duplicate_claims`, `test_full_path_from_empty_to_reimbursed`, `test_hr_rejection_gives_the_money_back_to_the_budget`, `test_coordinator_is_nudged_once_when_hr_is_slow` |
 
 ## Assumptions
 
-I asked these questions but had no answers before the deadline, so I made assumptions. Each one is a single config value or a small change.
+The brief left these points open, so I made assumptions. Each one is a single config value or a small change.
 
 1. The management report is in **NOK**, using one stored exchange rate per month.
 2. A purchase counts against the **office whose box was refilled**, in that office's currency. A visitor's claim is sent in the receipt currency, and HR pays them in their payroll currency.
-3. When the budget is used up, refills pause until the **office coordinator** approves one more.
+3. When the budget is used up, refills pause until the **office coordinator** approves one more, or the next month's budget starts (re-checked automatically).
 4. HR offers a **claim-status lookup** and accepts an **idempotency key**.
 5. The chat tool's **status** shows office / remote / leave. Visitors set their location with a command.
 6. Each office has **one coordinator** for escalations and approvals.

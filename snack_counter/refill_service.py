@@ -344,6 +344,8 @@ class RefillService:
             for refill in list(self.refills.values()):
                 if refill.state is RefillState.OFFERED:
                     self._expire_offer_if_due(refill, now)
+                elif refill.state is RefillState.BLOCKED_BUDGET:
+                    self._unblock_if_budget_available(refill, now)
                 elif refill.state is RefillState.COMMITTED:
                     self._check_buy_deadline(refill, now)
                 elif refill.state is RefillState.PURCHASED:
@@ -407,6 +409,21 @@ class RefillService:
             f"The {office.name} snack box is empty, but this month's snack budget is used up. "
             "The coordinator has been asked. Please don't buy for now.",
         )
+
+    def _unblock_if_budget_available(self, refill: Refill, now: datetime) -> None:
+        """A blocked refill must not wait for the coordinator forever: when a
+        new month starts (or an HR rejection frees money), restart it."""
+        office = self._office(refill.office_id)
+        remaining = self.ledger.remaining(office.id, office.local_month(now))
+        if remaining < office.typical_min:
+            return
+        refill.log(now, f"budget available again ({remaining}), unblocked")
+        self.chat.send_direct(
+            office.coordinator_id,
+            f"{refill.id}: budget is available again, so the {office.name} refill "
+            "has restarted. No approval needed.",
+        )
+        self._offer_next(refill, now)
 
     def _expire_offer_if_due(self, refill: Refill, now: datetime) -> None:
         offer = refill.current_offer
