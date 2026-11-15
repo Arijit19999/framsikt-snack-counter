@@ -1,0 +1,2 @@
+pytest>=8
+tzdata  # time zone database; needed on Windows for Europe/Oslo and Asia/Kolkata

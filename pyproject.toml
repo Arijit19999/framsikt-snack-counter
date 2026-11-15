@@ -1,0 +1,10 @@
+[project]
+name = "snack-counter"
+version = "0.1.0"
+description = "Framsikt take-home: snack counter refill automation (core logic)"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
